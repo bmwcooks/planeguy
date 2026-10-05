@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>until i get on the plane</title>
+    
+    <!-- Importing Google Fonts for a clean, modern aesthetic -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Loading Tailwind CSS via CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            /* Deep, vibrant sky gradient */
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #312e81 100%);
+            background-size: 200% 200%;
+            animation: gradientShift 15s ease infinite;
+            color: #f8fafc;
+        }
+
+        /* Subtle background animation */
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glassmorphism effect for the countdown container */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Airplane flying animation */
+        @keyframes fly {
+            0% { transform: translate(-20px, 20px) scale(0.9); opacity: 0.5; }
+            50% { transform: translate(0px, 0px) scale(1); opacity: 1; }
+            100% { transform: translate(20px, -20px) scale(0.9); opacity: 0.5; }
+        }
+
+        .plane-icon {
+            animation: fly 6s ease-in-out infinite alternate;
+        }
+        
+        .time-box {
+            min-width: 90px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 overflow-hidden relative">
+
+    <!-- Decorative background elements (stars/clouds concept) -->
+    <div class="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-[100px] opacity-30 animate-pulse"></div>
+    <div class="absolute bottom-1/4 right-1/4 w-64 h-64 bg-purple-500 rounded-full mix-blend-multiply filter blur-[100px] opacity-30 animate-pulse" style="animation-delay: 2s;"></div>
+
+    <!-- Main Content Container -->
+    <div class="glass-panel rounded-3xl p-8 md:p-14 max-w-4xl w-full text-center relative z-10">
+        
+        <!-- Header with airplane SVG -->
+        <div class="flex justify-center mb-6 text-blue-300 plane-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 256 256">
+                <path d="M243.31,136,144,116.14V40a16,16,0,0,0-32,0v76.14L12.69,136A15.86,15.86,0,0,0,1.48,150.28a16,16,0,0,0,14.62,18l79.9,8.88V216L72.18,229.41a8,8,0,0,0-2.31,13.62l16,11.23a8,8,0,0,0,9.22,0L128,231.25l32.92,23.05a8,8,0,0,0,9.22,0l16-11.23a8,8,0,0,0-2.31-13.62L160,216V177.12l79.9-8.88a16,16,0,0,0,14.62-18A15.86,15.86,0,0,0,243.31,136Zm-3.47,15.73-82.68,9.19a8,8,0,0,0-7.16,7.95V210.63l20.48-11.7a8,8,0,0,0,4-6.93V184a8,8,0,0,0-16,0v4.61l-14.77,8.44a8,8,0,0,0,0,13.86L164.21,223l-31.62-22.13a8,8,0,0,0-9.18,0L91.79,223,112.28,211a8,8,0,0,0,0-13.86L97.52,188.61V184a8,8,0,0,0-16,0v8.05a8,8,0,0,0,4,6.93l20.48,11.7V168.87a8,8,0,0,0-7.16-7.95L16.16,151.73a.09.09,0,0,1-.08,0,1.38,1.38,0,0,1-.13-.12l104.2-20.84A8,8,0,0,0,128,123V40a15.86,15.86,0,0,1,1.14-5.83h0A15.86,15.86,0,0,1,130.28,33c0-.07.08-.13.13-.19A15.72,15.72,0,0,1,136,29.35h0a15.72,15.72,0,0,1,5.59,3.46c0,.06.09.12.13.19A15.86,15.86,0,0,1,142.86,34h0A15.86,15.86,0,0,1,144,39.83V123a8,8,0,0,0,7.85,7.84l104.2,20.84a1.38,1.38,0,0,1-.13.12A.09.09,0,0,1,239.84,151.73Z"></path>
+            </svg>
+        </div>
+
+        <h1 class="text-4xl md:text-6xl font-black tracking-tight mb-4 uppercase">
+            Until I get on the plane
+        </h1>
+        <p class="text-blue-200 text-lg md:text-xl font-light mb-12 tracking-wide">
+            December 8, 2026 • 11:00 AM
+        </p>
+
+        <!-- Countdown Grid -->
+        <div id="countdown" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            
+            <!-- Days -->
+            <div class="glass-panel rounded-2xl py-6 px-4 flex flex-col items-center justify-center time-box hover:scale-105 transition-transform duration-300">
+                <span id="days" class="text-5xl md:text-7xl font-bold tracking-tighter mb-2">00</span>
+                <span class="text-xs md:text-sm font-medium text-blue-300 uppercase tracking-widest">Days</span>
+            </div>
+            
+            <!-- Hours -->
+            <div class="glass-panel rounded-2xl py-6 px-4 flex flex-col items-center justify-center time-box hover:scale-105 transition-transform duration-300">
+                <span id="hours" class="text-5xl md:text-7xl font-bold tracking-tighter mb-2">00</span>
+                <span class="text-xs md:text-sm font-medium text-blue-300 uppercase tracking-widest">Hours</span>
+            </div>
+            
+            <!-- Minutes -->
+            <div class="glass-panel rounded-2xl py-6 px-4 flex flex-col items-center justify-center time-box hover:scale-105 transition-transform duration-300">
+                <span id="minutes" class="text-5xl md:text-7xl font-bold tracking-tighter mb-2">00</span>
+                <span class="text-xs md:text-sm font-medium text-blue-300 uppercase tracking-widest">Minutes</span>
+            </div>
+            
+            <!-- Seconds -->
+            <div class="glass-panel rounded-2xl py-6 px-4 flex flex-col items-center justify-center time-box hover:scale-105 transition-transform duration-300">
+                <span id="seconds" class="text-5xl md:text-7xl font-bold tracking-tighter mb-2 text-blue-400">00</span>
+                <span class="text-xs md:text-sm font-medium text-blue-300 uppercase tracking-widest">Seconds</span>
+            </div>
+
+        </div>
+
+        <!-- Hidden message for when the countdown finishes -->
+        <div id="finished-message" class="hidden mt-10">
+            <h2 class="text-4xl md:text-5xl font-black text-green-400 animate-bounce">
+                Bon Voyage! ✈️
+            </h2>
+            <p class="text-xl mt-4 text-slate-200">It's time to fly.</p>
+        </div>
+
+    </div>
+
+    <script>
+        // Set the date we're counting down to
+        // Note: This uses the local time zone of the user's device.
+        const countDownDate = new Date("Dec 8, 2026 11:00:00").getTime();
+
+        // Update the countdown every 1 second
+        const countdownTimer = setInterval(function() {
+
+            // Get today's date and time
+            const now = new Date().getTime();
+
+            // Find the distance between now and the count down date
+            const distance = countDownDate - now;
+
+            // Time calculations for days, hours, minutes and seconds
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            // Format numbers to always show two digits (e.g., "05" instead of "5")
+            const formattedDays = days.toString().padStart(2, '0');
+            const formattedHours = hours.toString().padStart(2, '0');
+            const formattedMinutes = minutes.toString().padStart(2, '0');
+            const formattedSeconds = seconds.toString().padStart(2, '0');
+
+            // Output the result in the elements
+            document.getElementById("days").innerHTML = formattedDays;
+            document.getElementById("hours").innerHTML = formattedHours;
+            document.getElementById("minutes").innerHTML = formattedMinutes;
+            document.getElementById("seconds").innerHTML = formattedSeconds;
+
+            // If the count down is over, hide the timer and show the completion message
+            if (distance < 0) {
+                clearInterval(countdownTimer);
+                document.getElementById("countdown").style.display = "none";
+                document.getElementById("finished-message").classList.remove("hidden");
+                document.querySelector("p.text-blue-200").style.display = "none";
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
