@@ -53,16 +53,60 @@
         .time-box {
             min-width: 90px;
         }
+
+        /* After the countdown, keep the same glass look but leave room
+           for the flight status and itinerary on a laptop or a phone. */
+        body.flight-open .page-shell {
+            padding: 1.25rem 1.15rem;
+        }
+
+        body.flight-open h1 {
+            font-size: 1.65rem;
+            line-height: 1.15;
+            margin-bottom: 0.25rem;
+        }
+
+        body.flight-open .plane-icon {
+            /* The fly animation travels 20px downward; keep that clear of the title. */
+            margin-bottom: 1.6rem;
+        }
+
+        body.flight-open .plane-icon svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        body.flight-open #finished-message {
+            margin-top: 0.75rem;
+        }
+
+        body.flight-open #finished-message > p {
+            margin-top: 0.25rem;
+        }
+
+        body.flight-open #finished-message h2 {
+            font-size: 1.85rem;
+        }
+
+        @media (min-width: 768px) {
+            body.flight-open .page-shell {
+                padding: 1.5rem 2rem 1.35rem;
+            }
+
+            body.flight-open h1 {
+                font-size: 2rem;
+            }
+        }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4 overflow-hidden relative">
+<body class="min-h-screen flex flex-col items-center p-3 md:p-4 overflow-x-hidden relative">
 
     <!-- Decorative background elements (stars/clouds concept) -->
     <div class="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-[100px] opacity-30 animate-pulse"></div>
     <div class="absolute bottom-1/4 right-1/4 w-64 h-64 bg-purple-500 rounded-full mix-blend-multiply filter blur-[100px] opacity-30 animate-pulse" style="animation-delay: 2s;"></div>
 
     <!-- Main Content Container -->
-    <div class="glass-panel rounded-3xl p-8 md:p-14 max-w-4xl w-full text-center relative z-10">
+    <div id="page-shell" class="page-shell glass-panel rounded-3xl p-8 md:p-14 max-w-4xl w-full my-auto text-center relative z-10">
         
         <!-- Header with airplane SVG -->
         <div class="flex justify-center mb-6 text-blue-300 plane-icon">
@@ -74,8 +118,8 @@
         <h1 class="text-4xl md:text-6xl font-black tracking-tight mb-4 uppercase">
             Until I get on the plane
         </h1>
-        <p class="text-blue-200 text-lg md:text-xl font-light mb-12 tracking-wide">
-            December 8, 2026 • 11:00 AM
+        <p id="event-time" class="text-blue-200 text-lg md:text-xl font-light mb-12 tracking-wide">
+            December 8, 2026 • 11:00 AM PT
         </p>
 
         <!-- Countdown Grid -->
@@ -113,14 +157,274 @@
                 Bon Voyage! ✈️
             </h2>
             <p class="text-xl mt-4 text-slate-200">It's time to fly.</p>
+
+            <section id="flight-status" class="mt-4" aria-label="Scheduled outbound status">
+                <p class="text-[11px] font-medium uppercase tracking-[0.28em] text-blue-300">Scheduled</p>
+
+                <div id="flight-phase-boarding" class="hidden mt-3">
+                    <h3 class="text-2xl md:text-3xl font-black tracking-tight">Boarding / departing soon</h3>
+                    <p class="mt-2 text-sm md:text-base text-slate-200">
+                        United UA32 leaves Los Angeles LAX Terminal 7 at 11:05 AM PT.
+                    </p>
+                </div>
+
+                <div id="flight-phase-airborne" class="hidden mt-3">
+                    <p class="text-xs font-medium uppercase tracking-widest text-blue-300">Lands in</p>
+                    <div class="mx-auto mt-2 grid max-w-xs grid-cols-3 gap-2">
+                        <div class="glass-panel rounded-xl py-2">
+                            <div id="land-hours" class="text-3xl font-bold tracking-tighter">00</div>
+                            <div class="text-[10px] font-medium uppercase tracking-widest text-blue-300">Hours</div>
+                        </div>
+                        <div class="glass-panel rounded-xl py-2">
+                            <div id="land-minutes" class="text-3xl font-bold tracking-tighter">00</div>
+                            <div class="text-[10px] font-medium uppercase tracking-widest text-blue-300">Minutes</div>
+                        </div>
+                        <div class="glass-panel rounded-xl py-2">
+                            <div id="land-seconds" class="text-3xl font-bold tracking-tighter text-blue-400">00</div>
+                            <div class="text-[10px] font-medium uppercase tracking-widest text-blue-300">Seconds</div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 text-sm md:text-base text-slate-200">
+                        <p class="text-[11px] font-medium uppercase tracking-[0.22em] text-blue-300">Scheduled landing</p>
+                        <p id="landing-pt" class="mt-1"></p>
+                        <p id="landing-jst"></p>
+                    </div>
+
+                    <div class="mt-4">
+                        <div class="flex items-center justify-between text-xs font-medium uppercase tracking-widest text-blue-300">
+                            <span>LAX</span>
+                            <span id="flight-percent">0% complete</span>
+                            <span>NRT</span>
+                        </div>
+                        <div id="flight-progress" class="relative mt-4 h-2" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Scheduled progress from LAX to NRT">
+                            <div class="h-full overflow-hidden rounded-full bg-white/10">
+                                <div id="flight-progress-fill" class="h-full rounded-full bg-blue-400" style="width: 0%"></div>
+                            </div>
+                            <div id="flight-progress-plane" class="absolute top-1/2" style="left: 0%">
+                                <svg class="-translate-x-1/2 -translate-y-1/2 rotate-90 text-blue-100 drop-shadow-md" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="flight-phase-landed" class="hidden mt-3">
+                    <h3 class="text-2xl md:text-3xl font-black tracking-tight text-green-400">Landed in Tokyo</h3>
+                    <div class="mt-2 text-sm md:text-base text-slate-200">
+                        <p class="text-[11px] font-medium uppercase tracking-[0.22em] text-blue-300">Scheduled arrival</p>
+                        <p id="landed-pt" class="mt-1"></p>
+                        <p id="landed-jst"></p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="flight-info" class="mt-4 grid gap-3 text-left md:grid-cols-2" aria-label="Flight itinerary">
+                <article id="outbound-flight" class="glass-panel rounded-2xl p-3">
+                    <p class="text-[11px] font-medium uppercase tracking-[0.22em] text-blue-300">Outbound</p>
+                    <h3 class="mt-1 text-lg font-bold">United UA32</h3>
+                    <p class="text-sm text-blue-100">Boeing 787-9</p>
+                    <p class="mt-3 text-sm leading-snug text-slate-200">Los Angeles LAX Terminal 7 to Tokyo Narita NRT Terminal 1</p>
+                    <dl class="mt-3 grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                            <dt class="text-[10px] font-medium uppercase tracking-widest text-blue-300">Departs</dt>
+                            <dd class="mt-1">Tue Dec 8, 2026</dd>
+                            <dd class="font-medium">11:05 AM PT</dd>
+                        </div>
+                        <div>
+                            <dt class="text-[10px] font-medium uppercase tracking-widest text-blue-300">Arrives</dt>
+                            <dd class="mt-1">Wed Dec 9, 2026</dd>
+                            <dd class="font-medium">3:55 PM JST</dd>
+                        </div>
+                    </dl>
+                    <p class="mt-3 text-xs font-medium tracking-wide text-blue-200">Nonstop · 11h 50m</p>
+                </article>
+
+                <article id="return-flight" class="glass-panel rounded-2xl p-3">
+                    <p class="text-[11px] font-medium uppercase tracking-[0.22em] text-blue-300">Return</p>
+                    <h3 class="mt-1 text-lg font-bold">United UA7946</h3>
+                    <p class="text-sm text-blue-100">Operated by ANA as NH6 · Boeing 787-9</p>
+                    <p class="mt-3 text-sm leading-snug text-slate-200">Tokyo Narita NRT Terminal 1 to Los Angeles LAX Tom Bradley International Terminal</p>
+                    <dl class="mt-3 grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                            <dt class="text-[10px] font-medium uppercase tracking-widest text-blue-300">Departs</dt>
+                            <dd class="mt-1">Wed Dec 30, 2026</dd>
+                            <dd class="font-medium">5:00 PM JST</dd>
+                        </div>
+                        <div>
+                            <dt class="text-[10px] font-medium uppercase tracking-widest text-blue-300">Arrives</dt>
+                            <dd class="mt-1">Wed Dec 30, 2026</dd>
+                            <dd class="font-medium">9:50 AM PT</dd>
+                        </div>
+                    </dl>
+                    <p class="mt-3 text-xs font-medium tracking-wide text-blue-200">Nonstop · 9h 50m</p>
+                </article>
+            </section>
         </div>
 
     </div>
 
     <script>
-        // Set the date we're counting down to
-        // Note: This uses the local time zone of the user's device.
-        const countDownDate = new Date("Dec 8, 2026 11:00:00").getTime();
+        // Departure countdown is 11:00 AM Pacific Time on December 8, 2026.
+        // America/Los_Angeles supplies the PST (UTC-8) or PDT (UTC-7) offset
+        // for that civil time, so the countdown does not follow the viewer's device timezone.
+        const PACIFIC_TIME_ZONE = "America/Los_Angeles";
+        const TOKYO_TIME_ZONE = "Asia/Tokyo";
+
+        // Milliseconds to add to a UTC instant to get that zone's wall clock
+        // read as if it were UTC. Negative for time zones behind UTC.
+        function timeZoneOffsetMs(timeZone, epochMs) {
+            const formatter = new Intl.DateTimeFormat("en-US", {
+                timeZone: timeZone,
+                hour12: false,
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit"
+            });
+            const values = {};
+            for (const part of formatter.formatToParts(new Date(epochMs))) {
+                if (part.type !== "literal") {
+                    values[part.type] = part.value;
+                }
+            }
+            // Some engines report midnight as hour "24" when hour12 is false.
+            const hour = values.hour === "24" ? 0 : Number(values.hour);
+            const wallClockAsUtc = Date.UTC(
+                Number(values.year),
+                Number(values.month) - 1,
+                Number(values.day),
+                hour,
+                Number(values.minute),
+                Number(values.second)
+            );
+            return wallClockAsUtc - epochMs;
+        }
+
+        // Convert a wall-clock time in a zone to a UTC epoch. The offset is
+        // resolved twice so a daylight-saving transition is taken from the
+        // instant itself, not from a UTC guess on the other side of it.
+        function wallTimeToEpoch(timeZone, year, month, day, hour, minute, second) {
+            const utcGuess = Date.UTC(year, month - 1, day, hour, minute, second);
+            let epoch = utcGuess - timeZoneOffsetMs(timeZone, utcGuess);
+            epoch = utcGuess - timeZoneOffsetMs(timeZone, epoch);
+            return epoch;
+        }
+
+        const countDownDate = wallTimeToEpoch(PACIFIC_TIME_ZONE, 2026, 12, 8, 11, 0, 0);
+
+        // Scheduled UA32 times only. This is not a live flight feed.
+        // Departs Dec 8, 2026 11:05 AM PT (19:05 UTC). Arrives Dec 9, 2026 3:55 PM JST (06:55 UTC).
+        const outboundDepart = wallTimeToEpoch(PACIFIC_TIME_ZONE, 2026, 12, 8, 11, 5, 0);
+        const outboundArrive = wallTimeToEpoch(TOKYO_TIME_ZONE, 2026, 12, 9, 15, 55, 0);
+
+        // Shown clock time is formatted in Pacific Time and labeled PT.
+        function formatPacificLabel(epochMs) {
+            const formatter = new Intl.DateTimeFormat("en-US", {
+                timeZone: PACIFIC_TIME_ZONE,
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+                hour12: true
+            });
+            const values = {};
+            for (const part of formatter.formatToParts(new Date(epochMs))) {
+                if (part.type !== "literal") {
+                    values[part.type] = part.value;
+                }
+            }
+            return `${values.month} ${values.day}, ${values.year} • ${values.hour}:${values.minute} ${values.dayPeriod} PT`;
+        }
+
+        document.getElementById("event-time").textContent = formatPacificLabel(countDownDate);
+
+        function formatZonedWhen(epochMs, timeZone, zoneLabel) {
+            const formatter = new Intl.DateTimeFormat("en-US", {
+                timeZone: timeZone,
+                weekday: "short",
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+                hour12: true
+            });
+            const values = {};
+            for (const part of formatter.formatToParts(new Date(epochMs))) {
+                if (part.type !== "literal") {
+                    values[part.type] = part.value;
+                }
+            }
+            return `${values.weekday} ${values.month} ${values.day}, ${values.year} at ${values.hour}:${values.minute} ${values.dayPeriod} ${zoneLabel}`;
+        }
+
+        function padTwo(value) {
+            return value.toString().padStart(2, "0");
+        }
+
+        let flightStarted = false;
+
+        function showFlightBoard() {
+            if (flightStarted) {
+                return;
+            }
+            flightStarted = true;
+            document.getElementById("countdown").style.display = "none";
+            document.getElementById("finished-message").classList.remove("hidden");
+            document.getElementById("event-time").style.display = "none";
+            document.body.classList.add("flight-open");
+
+            const landingPt = formatZonedWhen(outboundArrive, PACIFIC_TIME_ZONE, "PT");
+            const landingJst = formatZonedWhen(outboundArrive, TOKYO_TIME_ZONE, "JST");
+            document.getElementById("landing-pt").textContent = landingPt;
+            document.getElementById("landing-jst").textContent = landingJst;
+            document.getElementById("landed-pt").textContent = landingPt;
+            document.getElementById("landed-jst").textContent = landingJst;
+        }
+
+        function showPhase(name) {
+            for (const phase of ["boarding", "airborne", "landed"]) {
+                document.getElementById("flight-phase-" + phase).classList.toggle("hidden", phase !== name);
+            }
+        }
+
+        // Scheduled progress for UA32: boarding until 11:05 AM PT, then a
+        // LAX-to-NRT bar until the scheduled arrival, then "Landed in Tokyo".
+        function updateFlightProgress() {
+            const now = Date.now();
+            if (now < outboundDepart) {
+                showPhase("boarding");
+                return;
+            }
+            if (now >= outboundArrive) {
+                showPhase("landed");
+                return;
+            }
+
+            showPhase("airborne");
+            const remaining = outboundArrive - now;
+            const hours = Math.floor(remaining / (1000 * 60 * 60));
+            const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+            document.getElementById("land-hours").textContent = padTwo(hours);
+            document.getElementById("land-minutes").textContent = padTwo(minutes);
+            document.getElementById("land-seconds").textContent = padTwo(seconds);
+
+            const total = outboundArrive - outboundDepart;
+            const elapsed = now - outboundDepart;
+            const precise = Math.min(100, Math.max(0, (elapsed / total) * 100));
+            const shown = Math.round(precise);
+            document.getElementById("flight-progress-fill").style.width = precise + "%";
+            document.getElementById("flight-progress-plane").style.left = precise + "%";
+            document.getElementById("flight-percent").textContent = shown + "% complete";
+            document.getElementById("flight-progress").setAttribute("aria-valuenow", String(shown));
+            document.getElementById("flight-progress").setAttribute("aria-valuetext", shown + "% of scheduled flight complete");
+        }
 
         // Update the countdown every 1 second
         const countdownTimer = setInterval(function() {
@@ -152,9 +456,9 @@
             // If the count down is over, hide the timer and show the completion message
             if (distance < 0) {
                 clearInterval(countdownTimer);
-                document.getElementById("countdown").style.display = "none";
-                document.getElementById("finished-message").classList.remove("hidden");
-                document.querySelector("p.text-blue-200").style.display = "none";
+                showFlightBoard();
+                updateFlightProgress();
+                setInterval(updateFlightProgress, 1000);
             }
         }, 1000);
     </script>
