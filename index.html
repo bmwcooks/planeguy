@@ -74,8 +74,8 @@
         <h1 class="text-4xl md:text-6xl font-black tracking-tight mb-4 uppercase">
             Until I get on the plane
         </h1>
-        <p class="text-blue-200 text-lg md:text-xl font-light mb-12 tracking-wide">
-            December 8, 2026 • 11:00 AM
+        <p id="event-time" class="text-blue-200 text-lg md:text-xl font-light mb-12 tracking-wide">
+            December 8, 2026 • 11:00 AM PT
         </p>
 
         <!-- Countdown Grid -->
@@ -118,9 +118,76 @@
     </div>
 
     <script>
-        // Set the date we're counting down to
-        // Note: This uses the local time zone of the user's device.
-        const countDownDate = new Date("Dec 8, 2026 11:00:00").getTime();
+        // Departure is 11:00 AM Pacific Time on December 8, 2026.
+        // America/Los_Angeles supplies the PST (UTC-8) or PDT (UTC-7) offset
+        // for that civil time, so the countdown does not follow the viewer's device timezone.
+        const PACIFIC_TIME_ZONE = "America/Los_Angeles";
+
+        // Milliseconds to add to a UTC instant to get the Pacific wall clock
+        // read as if it were UTC. Negative during both PST and PDT.
+        function pacificOffsetMs(epochMs) {
+            const formatter = new Intl.DateTimeFormat("en-US", {
+                timeZone: PACIFIC_TIME_ZONE,
+                hour12: false,
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit"
+            });
+            const values = {};
+            for (const part of formatter.formatToParts(new Date(epochMs))) {
+                if (part.type !== "literal") {
+                    values[part.type] = part.value;
+                }
+            }
+            // Some engines report midnight as hour "24" when hour12 is false.
+            const hour = values.hour === "24" ? 0 : Number(values.hour);
+            const wallClockAsUtc = Date.UTC(
+                Number(values.year),
+                Number(values.month) - 1,
+                Number(values.day),
+                hour,
+                Number(values.minute),
+                Number(values.second)
+            );
+            return wallClockAsUtc - epochMs;
+        }
+
+        // Convert a Pacific wall-clock time to a UTC epoch. The offset is
+        // resolved twice so a daylight-saving transition is taken from the
+        // instant itself, not from a UTC guess on the other side of it.
+        function pacificWallTimeToEpoch(year, month, day, hour, minute, second) {
+            const utcGuess = Date.UTC(year, month - 1, day, hour, minute, second);
+            let epoch = utcGuess - pacificOffsetMs(utcGuess);
+            epoch = utcGuess - pacificOffsetMs(epoch);
+            return epoch;
+        }
+
+        const countDownDate = pacificWallTimeToEpoch(2026, 12, 8, 11, 0, 0);
+
+        // Shown clock time is formatted in Pacific Time and labeled PT.
+        function formatPacificLabel(epochMs) {
+            const formatter = new Intl.DateTimeFormat("en-US", {
+                timeZone: PACIFIC_TIME_ZONE,
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+                hour12: true
+            });
+            const values = {};
+            for (const part of formatter.formatToParts(new Date(epochMs))) {
+                if (part.type !== "literal") {
+                    values[part.type] = part.value;
+                }
+            }
+            return `${values.month} ${values.day}, ${values.year} • ${values.hour}:${values.minute} ${values.dayPeriod} PT`;
+        }
+
+        document.getElementById("event-time").textContent = formatPacificLabel(countDownDate);
 
         // Update the countdown every 1 second
         const countdownTimer = setInterval(function() {
@@ -154,7 +221,7 @@
                 clearInterval(countdownTimer);
                 document.getElementById("countdown").style.display = "none";
                 document.getElementById("finished-message").classList.remove("hidden");
-                document.querySelector("p.text-blue-200").style.display = "none";
+                document.getElementById("event-time").style.display = "none";
             }
         }, 1000);
     </script>
